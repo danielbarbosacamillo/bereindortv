@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>BereIndorTV</title>
+<style>
+body { margin:0; background:black; }
+img, video {
+  width:100vw;
+  height:100vh;
+  object-fit:cover;
+}
+</style>
+</head>
+<body>
+
+<img id="img" style="display:none;">
+<video id="vid" autoplay muted style="display:none;"></video>
+
+<script>
+const url = "https://script.google.com/macros/s/AKfycbx8h1SdrAzcuNEZY_epVBDbEh4TSDjy9S0FlMG6ohSoWv7LNLczFeQ-5zqGEfnUd182/exec?id=1P_Z2zfvMds8Ymzipu8jndW2Po-fhh8q_";
+
+let lista = [];
+let i = 0;
+
+async function carregar() {
+  const res = await fetch(url);
+  lista = await res.json();
+  mostrar();
+}
+
+function mostrar() {
+  if (i >= lista.length) i = 0;
+
+  let item = lista[i];
+
+  if (item.includes(".mp4")) {
+    vid.style.display = "block";
+    img.style.display = "none";
+    vid.src = item;
+    vid.onended = () => { i++; mostrar(); };
+  } else {
+    img.style.display = "block";
+    vid.style.display = "none";
+    img.src = item;
+    setTimeout(() => { i++; mostrar(); }, 5000);
+  }
+}
+
+carregar();
+</script>
+
+</body>
+</html>
