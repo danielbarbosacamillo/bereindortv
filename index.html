@@ -21,7 +21,7 @@
     img, video {
       width: 100%;
       height: 100%;
-      object-fit: contain; /* use "cover" se quiser preencher a tela cortando */
+      object-fit: cover; /* 🔥 ALTERADO AQUI (tela cheia) */
       background: #000;
     }
   </style>
@@ -30,7 +30,6 @@
   <div id="player"></div>
 
   <script>
-    // ✅ EDITE AQUI: coloque seus arquivos (na ordem que você quer)
     const midias = [
       "midia/01.jpg",
       "midia/02.png",
@@ -38,8 +37,7 @@
       "midia/04.jpg"
     ];
 
-    // ✅ tempo de cada imagem (ms)
-    const tempoImagem = 6000; // 6 segundos
+    const tempoImagem = 6000;
 
     let i = 0;
     let timer = null;
@@ -69,7 +67,7 @@
         v.src = arquivo;
 
         v.autoplay = true;
-        v.muted = true;       // 🔥 importante pra autoplay funcionar em muitos navegadores
+        v.muted = true;
         v.playsInline = true;
         v.controls = false;
         v.loop = false;
@@ -82,7 +80,6 @@
 
         player.appendChild(v);
 
-        // garantia: tenta dar play
         v.play().catch(() => {});
       } else {
         const img = document.createElement("img");
@@ -100,7 +97,6 @@
       }
     }
 
-    // iniciar
     tocar();
   </script>
 </body>
