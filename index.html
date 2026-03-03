@@ -7,32 +7,26 @@
 
   <style>
     html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
+      margin: 0; padding: 0;
+      width: 100%; height: 100%;
       background: #000;
       overflow: hidden;
     }
 
-    /* Tela inteira */
     #stage {
       position: fixed;
       inset: 0;
       background: #000;
     }
 
-    /* Área que pode rotacionar */
     #rotator {
       position: absolute;
       left: 50%;
       top: 50%;
-      transform: translate(-50%, -50%); /* base */
       transform-origin: center center;
       background: #000;
     }
 
-    /* O player fica dentro do rotator e ocupa 100% dele */
     #player {
       width: 100%;
       height: 100%;
@@ -40,17 +34,30 @@
       background: #000;
     }
 
-    /* Mídia sempre “enche” */
     #player > img,
     #player > video {
       position: absolute;
       inset: 0;
       width: 100%;
       height: 100%;
-      object-fit: cover;   /* tela cheia (corta se precisar) */
+      object-fit: cover;     /* tela cheia */
       object-position: center;
       background: #000;
       display: block;
+    }
+
+    /* botão opcional p/ testar */
+    #btn {
+      position: fixed;
+      right: 10px;
+      bottom: 10px;
+      z-index: 9999;
+      padding: 10px 14px;
+      font-size: 14px;
+      border: 0;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.15);
+      color: #fff;
     }
   </style>
 </head>
@@ -62,8 +69,10 @@
     </div>
   </div>
 
+  <button id="btn">Girar</button>
+
   <script>
-    // ✅ EDITE AQUI: seus arquivos como já estão
+    // ✅ SUA PLAYLIST (mantém como está)
     const midias = [
       "midia/01.jpg",
       "midia/02.png",
@@ -71,35 +80,48 @@
       "midia/04.jpg"
     ];
 
-    const tempoImagem = 6000; // 6s por imagem
+    const tempoImagem = 6000;
+
+    // ✅ AJUSTE AQUI:
+    // 0 = normal (PC)
+    // 90 = gira direita
+    // -90 = gira esquerda
+    // 180 = de cabeça pra baixo
+    let ROTACAO = 0;
+
     let i = 0;
     let timer = null;
 
     const rotator = document.getElementById("rotator");
     const player = document.getElementById("player");
+    const btn = document.getElementById("btn");
 
-    // ✅ Se a TV estiver em pé mas o navegador estiver “deitado”, isso corrige.
-    function ajustarOrientacao() {
+    function aplicarRotacao() {
       const w = window.innerWidth;
       const h = window.innerHeight;
 
-      // Se estiver landscape (w>h) mas você quer exibir como totem (portrait),
-      // rotaciona 90º e troca as dimensões (usa vh/vw)
-      const precisaGirar = (w > h);
+      // Se rotacionar 90/-90, troca largura/altura do “quadro”
+      const troca = (Math.abs(ROTACAO) === 90);
 
-      if (precisaGirar) {
-        rotator.style.width = h + "px";
-        rotator.style.height = w + "px";
-        rotator.style.transform = "translate(-50%, -50%) rotate(90deg)";
-      } else {
-        rotator.style.width = w + "px";
-        rotator.style.height = h + "px";
-        rotator.style.transform = "translate(-50%, -50%) rotate(0deg)";
-      }
+      const bw = troca ? h : w;
+      const bh = troca ? w : h;
+
+      rotator.style.width = bw + "px";
+      rotator.style.height = bh + "px";
+      rotator.style.transform = `translate(-50%, -50%) rotate(${ROTACAO}deg)`;
     }
 
-    window.addEventListener("resize", ajustarOrientacao);
-    ajustarOrientacao();
+    window.addEventListener("resize", aplicarRotacao);
+
+    // Botão só pra testar rápido (pode remover depois)
+    btn.addEventListener("click", () => {
+      const opcoes = [0, 90, 180, -90];
+      const idx = opcoes.indexOf(ROTACAO);
+      ROTACAO = opcoes[(idx + 1) % opcoes.length];
+      aplicarRotacao();
+    });
+
+    aplicarRotacao();
 
     function limparTimer() {
       if (timer) { clearTimeout(timer); timer = null; }
@@ -122,13 +144,13 @@
         const v = document.createElement("video");
         v.src = arquivo;
         v.autoplay = true;
-        v.muted = true;        // importante p/ autoplay
+        v.muted = true;
         v.playsInline = true;
         v.controls = false;
         v.loop = false;
 
         v.addEventListener("ended", proximo);
-        v.addEventListener("error", () => proximo());
+        v.addEventListener("error", proximo);
 
         player.appendChild(v);
         v.play().catch(() => {});
@@ -137,7 +159,7 @@
         img.src = arquivo;
 
         img.onload = () => { timer = setTimeout(proximo, tempoImagem); };
-        img.onerror = () => proximo();
+        img.onerror = proximo;
 
         player.appendChild(img);
       }
