@@ -4,32 +4,66 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>TV Indoor</title>
+
   <style>
     html, body {
-      margin: 0; padding: 0;
-      width: 100%; height: 100%;
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
       background: #000;
       overflow: hidden;
     }
+
+    /* Tela inteira */
+    #stage {
+      position: fixed;
+      inset: 0;
+      background: #000;
+    }
+
+    /* Área que pode rotacionar */
+    #rotator {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%); /* base */
+      transform-origin: center center;
+      background: #000;
+    }
+
+    /* O player fica dentro do rotator e ocupa 100% dele */
     #player {
       width: 100%;
       height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      position: relative;
+      background: #000;
     }
-    img, video {
+
+    /* Mídia sempre “enche” */
+    #player > img,
+    #player > video {
+      position: absolute;
+      inset: 0;
       width: 100%;
       height: 100%;
-      object-fit: cover; /* 🔥 ALTERADO AQUI (tela cheia) */
+      object-fit: cover;   /* tela cheia (corta se precisar) */
+      object-position: center;
       background: #000;
+      display: block;
     }
   </style>
 </head>
+
 <body>
-  <div id="player"></div>
+  <div id="stage">
+    <div id="rotator">
+      <div id="player"></div>
+    </div>
+  </div>
 
   <script>
+    // ✅ EDITE AQUI: seus arquivos como já estão
     const midias = [
       "midia/01.jpg",
       "midia/02.png",
@@ -37,12 +71,35 @@
       "midia/04.jpg"
     ];
 
-    const tempoImagem = 6000;
-
+    const tempoImagem = 6000; // 6s por imagem
     let i = 0;
     let timer = null;
 
+    const rotator = document.getElementById("rotator");
     const player = document.getElementById("player");
+
+    // ✅ Se a TV estiver em pé mas o navegador estiver “deitado”, isso corrige.
+    function ajustarOrientacao() {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+
+      // Se estiver landscape (w>h) mas você quer exibir como totem (portrait),
+      // rotaciona 90º e troca as dimensões (usa vh/vw)
+      const precisaGirar = (w > h);
+
+      if (precisaGirar) {
+        rotator.style.width = h + "px";
+        rotator.style.height = w + "px";
+        rotator.style.transform = "translate(-50%, -50%) rotate(90deg)";
+      } else {
+        rotator.style.width = w + "px";
+        rotator.style.height = h + "px";
+        rotator.style.transform = "translate(-50%, -50%) rotate(0deg)";
+      }
+    }
+
+    window.addEventListener("resize", ajustarOrientacao);
+    ajustarOrientacao();
 
     function limparTimer() {
       if (timer) { clearTimeout(timer); timer = null; }
@@ -59,39 +116,28 @@
 
       const arquivo = midias[i];
       const lower = arquivo.toLowerCase();
-
       const isVideo = lower.endsWith(".mp4") || lower.endsWith(".webm") || lower.endsWith(".ogg");
 
       if (isVideo) {
         const v = document.createElement("video");
         v.src = arquivo;
-
         v.autoplay = true;
-        v.muted = true;
+        v.muted = true;        // importante p/ autoplay
         v.playsInline = true;
         v.controls = false;
         v.loop = false;
 
         v.addEventListener("ended", proximo);
-        v.addEventListener("error", () => {
-          console.log("Erro ao carregar vídeo:", arquivo);
-          proximo();
-        });
+        v.addEventListener("error", () => proximo());
 
         player.appendChild(v);
-
         v.play().catch(() => {});
       } else {
         const img = document.createElement("img");
         img.src = arquivo;
 
-        img.onload = () => {
-          timer = setTimeout(proximo, tempoImagem);
-        };
-        img.onerror = () => {
-          console.log("Erro ao carregar imagem:", arquivo);
-          proximo();
-        };
+        img.onload = () => { timer = setTimeout(proximo, tempoImagem); };
+        img.onerror = () => proximo();
 
         player.appendChild(img);
       }
